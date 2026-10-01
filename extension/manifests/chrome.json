@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Screen Limiter",
+  "description": "Counts Chrome time in macOS Screen Time and closes sites that hit their limit.",
+  "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5nF1klMQ5oB4mJghI9anLrO3vk1wWcivvJJc7ibNvG8Ze0uan9q0R8FFfZK0QdfIW4fLem2M87Ezuz3doVjJzaD5MtdFzbEwmJrmJhID3hqmklgWWTb5CnWtjls+QGfcutVUepZbhOHkPjCN/3gKWt0SDbLhjiQnIvaRMP5db478tMvKwCr9xxWC/s27EbNpddo0S1Pzp62d1jhRuoy0zFQ8hxCNCqMwnKWzNReHhQGVXrjQAVp7QVaPvEQVWHrQq1Fwv960bcuOaB5Kq9eipzvIrzVWDI+mhi8Ln+19rSkQcLk9OB68ZsHdTF8VWMcNRSkxeCC8jl5dQ0fkyQiAEQIDAQAB",
+  "minimum_chrome_version": "120",
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["tabs", "nativeMessaging", "idle", "alarms"],
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "action": { "default_title": "Screen Limiter" }
+}

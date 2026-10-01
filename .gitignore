@@ -1,0 +1,4 @@
+tools/keys/*.pem
+mac/build/
+extension/dist/
+.DS_Store
