@@ -58,8 +58,10 @@ struct MenuView: View {
     }
 
     private var todaySeconds: TimeInterval? {
-        guard case .reporting(let url) = bridge.status else { return nil }
-        return bridge.ledger.seconds[url.displayDomain]
+        switch bridge.status {
+        case .reporting(let url), .extraTime(let url, _): bridge.ledger.seconds[url.displayDomain]
+        default: nil
+        }
     }
 
     private var reportedToday: some View {
@@ -131,6 +133,7 @@ private struct NowCard: View {
         case .notConnected: "puzzlepiece.extension.fill"
         case .paused: "pause.fill"
         case .reporting: "dot.radiowaves.left.and.right"
+        case .extraTime: "plus.circle.fill"
         case .blocked: "hourglass.bottomhalf.filled"
         }
     }
@@ -140,6 +143,7 @@ private struct NowCard: View {
         case .notConnected: .gray
         case .paused: .orange
         case .reporting: .green
+        case .extraTime: .yellow
         case .blocked: .red
         }
     }
@@ -148,7 +152,7 @@ private struct NowCard: View {
         switch status {
         case .notConnected: "Not connected"
         case .paused: "Paused"
-        case .reporting(let url): url.displayDomain
+        case .reporting(let url), .extraTime(let url, _): url.displayDomain
         case .blocked(let domain): domain
         }
     }
@@ -162,6 +166,8 @@ private struct NowCard: View {
         case .reporting:
             if let todaySeconds { "Counting in Screen Time · \(todaySeconds.shortDuration) today" }
             else { "Counting in Screen Time" }
+        case .extraTime(_, let until):
+            "Limit reached · extra time until \(until.formatted(date: .omitted, time: .shortened))"
         case .blocked:
             "Time limit reached. Screen Time blocked this site."
         }

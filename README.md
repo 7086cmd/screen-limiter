@@ -38,6 +38,12 @@ This needs Xcode 27 (no project file; `swiftc` builds the bundle). It signs with
 
 Then add website limits in System Settings → Screen Time → App Limits.
 
+## Asking for more time
+
+The "Time Limit Reached" page has **Ask For More Time**: **One More Minute** (once per site per day), then **Enter Passcode** → 15 minutes, 1 hour, or all day. The passcode is set in Screen Limiter → Settings → General. Without one, the durations are offered without a passcode.
+
+Screen Time's own passcode can't be checked by other apps, and there's no API to grant Screen Time extra time. So the app keeps the grant itself: Chrome/Firefox time still goes to Screen Time, but the site isn't blocked again until the grant runs out. Safari and other devices still see the site as over its limit.
+
 ## Developer tools
 
 | Command | What it does |

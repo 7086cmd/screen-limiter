@@ -16,6 +16,7 @@ final class Bridge {
         case notConnected
         case paused(String)
         case reporting(URL)
+        case extraTime(URL, until: Date)
         case blocked(String)
     }
 
@@ -27,6 +28,7 @@ final class Bridge {
     private(set) var reportingURL: URL?
     private(set) var lastBlock: (domain: String, date: Date)?
     private(set) var ledger = ReportedLedger.load()
+    private(set) var extraTime = ExtraTime.load()
     private(set) var log: [LogEntry] = []
 
     var windowMode: BridgeWindowMode {
@@ -132,6 +134,10 @@ final class Bridge {
             }
             tab = report
             apply()
+        case "timeStatus", "requestTime":
+            guard let request = try? JSONDecoder().decode(TimeRequest.self, from: data) else { return }
+            if report.type == "timeStatus" { sendTimeStatus(for: request.domain) }
+            else { grantTime(request) }
         default:
             break
         }
@@ -183,6 +189,16 @@ final class Bridge {
         webpage.url != nil && Date() >= verdictSettlesAt && webpage.urlIsBlocked
     }
 
+    /// Extra time granted from the block page for the site we're reporting.
+    private var extraTimeUntil: Date? {
+        reportingURL.flatMap { extraTime.until(for: $0.displayDomain) }
+    }
+
+    /// Screen Time says the site is over its limit and no extra time covers it.
+    private var shouldBlock: Bool {
+        isBlocked && extraTimeUntil == nil
+    }
+
     private func apply() {
         guard !demoMode else { return }
         let (url, reason) = desiredURL()
@@ -203,8 +219,10 @@ final class Bridge {
         reportingURL = url
         checkBlocked()
 
-        if isBlocked, let url {
+        if shouldBlock, let url {
             status = .blocked(url.displayDomain)
+        } else if isBlocked, let url, let until = extraTimeUntil {
+            status = .extraTime(url, until: until)
         } else if let url {
             status = .reporting(url)
         } else if !extensionConnected {
@@ -215,7 +233,7 @@ final class Bridge {
     }
 
     private func checkBlocked() {
-        guard isBlocked, let url = reportingURL else {
+        guard shouldBlock, let url = reportingURL else {
             lastBlockedURL = nil
             return
         }
@@ -230,7 +248,7 @@ final class Bridge {
 
     private func tick() {
         ticks += 1
-        if let url = reportingURL, !isBlocked {
+        if let url = reportingURL, !shouldBlock {
             ledger.add(1, to: url.displayDomain)
             if ticks % 10 == 0 { ledger.save() }
         }
@@ -239,6 +257,33 @@ final class Bridge {
             webpage.url = url
         }
         // Re-evaluate idle/staleness, and poll urlIsBlocked in case KVO doesn't fire.
+        apply()
+    }
+
+    // MARK: Extra time
+
+    private func sendTimeStatus(for domain: String) {
+        send(["type": "timeStatus", "domain": domain,
+              "oneMinuteAvailable": extraTime.canUseOneMinute(domain),
+              "passcodeRequired": Passcode.isSet])
+    }
+
+    private func grantTime(_ request: TimeRequest) {
+        let domain = request.domain
+        guard let option = request.option else { return }
+        if option == .oneMinute, !extraTime.canUseOneMinute(domain) {
+            send(["type": "timeDenied", "domain": domain, "reason": "One More Minute was already used for this site today."])
+            return
+        }
+        if option.needsPasscode, !Passcode.verify(request.passcode) {
+            record(.error, "Wrong passcode for extra time on \(domain)")
+            send(["type": "timeDenied", "domain": domain, "reason": "Wrong passcode."])
+            return
+        }
+        let until = extraTime.grant(option, to: domain)
+        extraTime.save()
+        record(.info, "Extra time for \(domain): \(option.label), until \(until.formatted(date: .omitted, time: .shortened))")
+        send(["type": "timeGranted", "domain": domain, "until": until.timeIntervalSince1970 * 1000])
         apply()
     }
 

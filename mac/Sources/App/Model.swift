@@ -19,6 +19,13 @@ struct TabReport: Decodable, Equatable {
     }
 }
 
+/// The block page asking about, or for, extra time on a site.
+struct TimeRequest: Decodable {
+    var domain: String
+    var option: ExtraTimeOption?
+    var passcode: String?
+}
+
 enum Browser: String, CaseIterable, Identifiable {
     case chrome, firefox
     var id: String { rawValue }

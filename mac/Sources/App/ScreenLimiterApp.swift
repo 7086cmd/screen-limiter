@@ -63,7 +63,7 @@ extension Bridge {
     var menuBarSymbol: String {
         switch status {
         case .blocked: "hourglass.bottomhalf.filled"
-        case .reporting: "hourglass"
+        case .reporting, .extraTime: "hourglass"
         case .paused, .notConnected: "hourglass.tophalf.filled"
         }
     }

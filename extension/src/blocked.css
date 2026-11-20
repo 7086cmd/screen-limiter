@@ -4,9 +4,13 @@
   --secondary: #6e6e73;
   --accent: #0071e3;
   --accent-text: #fff;
+  --fill: rgba(0, 0, 0, 0.06);
+  --field: #fff;
+  --danger: #d70015;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #1c1c1e; --text: #f5f5f7; --secondary: #98989d; --accent: #0a84ff; }
+  :root { --bg: #1c1c1e; --text: #f5f5f7; --secondary: #98989d; --accent: #0a84ff;
+          --fill: rgba(255, 255, 255, 0.1); --field: #2c2c2e; --danger: #ff6961; }
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
@@ -34,5 +38,26 @@ button {
   cursor: default;
 }
 button.primary { background: var(--accent); color: var(--accent-text); }
+button.secondary { background: var(--fill); color: var(--text); }
+button.link { background: none; color: var(--accent); margin-top: 14px; }
+button:disabled { opacity: 0.5; }
+[hidden] { display: none !important; }
+.actions.stack { flex-direction: column; align-items: center; }
+.actions.stack button { min-width: 220px; }
+.more { display: flex; flex-direction: column; align-items: center; }
+.passcode { margin-bottom: 12px; }
+.passcode input {
+  font: inherit;
+  width: 220px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--fill);
+  background: var(--field);
+  color: var(--text);
+  text-align: center;
+}
+.passcode input:focus { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+.status { min-height: 1.45em; margin: 14px 0 0; color: var(--secondary); font-size: 13px; }
+.status.error { color: var(--danger); }
 button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
 .hint { color: var(--secondary); font-size: 12px; margin-top: 28px; }

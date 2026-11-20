@@ -13,9 +13,26 @@
     <h1>Time Limit Reached</h1>
     <p class="domain" id="domain"></p>
     <p class="detail">You've reached your Screen Time limit for this website today.</p>
-    <div class="actions">
+    <div class="actions" id="main-actions">
       <button id="close" class="primary">Close Tab</button>
+      <button id="ask" class="secondary">Ask For More Time</button>
     </div>
+    <div class="more" id="more" hidden>
+      <div class="actions stack" id="choices">
+        <button id="one-minute" class="secondary" hidden>One More Minute</button>
+        <button id="enter-passcode" class="secondary" hidden>Enter Passcode</button>
+      </div>
+      <form class="passcode" id="passcode-form" hidden>
+        <input id="passcode" type="password" autocomplete="off" placeholder="Passcode" aria-label="Passcode">
+      </form>
+      <div class="actions stack" id="durations" hidden>
+        <button data-option="fifteenMinutes" class="secondary">Approve for 15 Minutes</button>
+        <button data-option="oneHour" class="secondary">Approve for 1 Hour</button>
+        <button data-option="allDay" class="secondary">Approve for All Day</button>
+      </div>
+      <button id="back" class="link">Cancel</button>
+    </div>
+    <p class="status" id="status" role="status"></p>
     <p class="hint">Change limits in System Settings → Screen Time.</p>
   </main>
   <script src="blocked.js"></script>

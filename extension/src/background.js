@@ -62,9 +62,34 @@ function hostOf(url) {
   }
 }
 
+// Tells the "Time Limit Reached" pages; fails harmlessly when none is open.
+function notifyPages(message) {
+  Promise.resolve(api.runtime.sendMessage(message)).catch(() => {});
+}
+
+// Puts tabs showing the block page for `domain` back on the page they were on.
+async function restoreTabs(domain) {
+  const tabs = await api.tabs.query({});
+  for (const tab of tabs) {
+    if (!tab.url?.startsWith(BLOCKED_PAGE)) continue;
+    const params = new URL(tab.url).searchParams;
+    const url = params.get("url");
+    if (params.get("domain") === domain && url) api.tabs.update(tab.id, { url });
+  }
+}
+
 async function onHostMessage(message) {
   if (message?.type === "hello") {
     report(true);
+    return;
+  }
+  if (message?.type === "timeStatus" || message?.type === "timeDenied") {
+    notifyPages(message);
+    return;
+  }
+  if (message?.type === "timeGranted") {
+    notifyPages(message);
+    restoreTabs(message.domain);
     return;
   }
   if (message?.type !== "blocked") return;
@@ -76,6 +101,17 @@ async function onHostMessage(message) {
     api.tabs.update(tab.id, { url: target });
   }
 }
+
+// The block page asks the app about extra time through us: only we hold the native port.
+api.runtime.onMessage.addListener((message) => {
+  if (message?.type !== "timeStatus" && message?.type !== "requestTime") return;
+  connect();
+  if (!port) {
+    notifyPages({ type: "timeDenied", domain: message.domain, reason: "Screen Limiter isn't running." });
+    return;
+  }
+  port.postMessage(message);
+});
 
 api.tabs.onActivated.addListener(() => report());
 api.tabs.onUpdated.addListener((_id, change) => {

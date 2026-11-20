@@ -13,6 +13,7 @@ enum Snapshot {
         let scenarios: [(String, Bridge.Status)] = [
             ("menu-reporting", .reporting(URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")!)),
             ("menu-paused", .paused("Google Chrome isn't the frontmost app")),
+            ("menu-extra-time", .extraTime(URL(string: "https://www.youtube.com/")!, until: Date().addingTimeInterval(15 * 60))),
             ("menu-blocked", .blocked("youtube.com")),
             ("menu-not-connected", .notConnected),
         ]

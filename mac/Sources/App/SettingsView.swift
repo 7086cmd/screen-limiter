@@ -83,6 +83,8 @@ private struct GeneralSettings: View {
                     .foregroundStyle(.secondary)
             }
 
+            ExtraTimeSettings()
+
             Section {
                 Toggle("Open at login", isOn: $openAtLogin)
                     .onChange(of: openAtLogin) { _, enabled in
@@ -174,6 +176,64 @@ extension SetupStep where Accessory == EmptyView {
     }
 }
 
+// MARK: - Extra time
+
+private struct ExtraTimeSettings: View {
+    @State private var isSet = Passcode.isSet
+    @State private var editing = false
+    @State private var newPasscode = ""
+    @State private var confirmation = ""
+
+    var body: some View {
+        Section {
+            LabeledContent("Passcode") {
+                HStack {
+                    Text(isSet ? "On" : "Off").foregroundStyle(.secondary)
+                    if isSet {
+                        Button("Turn Off") {
+                            Passcode.clear()
+                            isSet = Passcode.isSet
+                        }
+                    }
+                    Button(isSet ? "Change…" : "Set…") { editing = true }
+                }
+            }
+        } header: {
+            Text("Ask for more time")
+        } footer: {
+            Text("When a site hits its limit, the browser page offers One More Minute (once per site per day) and, with this passcode, 15 minutes, 1 hour, or the rest of the day. Without a passcode, anyone at the keyboard can take more time.")
+                .foregroundStyle(.secondary)
+        }
+        .sheet(isPresented: $editing) {
+            Form {
+                SecureField("New passcode", text: $newPasscode)
+                SecureField("Confirm", text: $confirmation)
+            }
+            .formStyle(.grouped)
+            .frame(width: 320)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { finish() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        Passcode.set(newPasscode)
+                        finish()
+                    }
+                    .disabled(newPasscode.count < 4 || newPasscode != confirmation)
+                }
+            }
+        }
+    }
+
+    private func finish() {
+        newPasscode = ""
+        confirmation = ""
+        editing = false
+        isSet = Passcode.isSet
+    }
+}
+
 // MARK: - Bridge (experimental knobs for spike S7)
 
 private struct BridgeSettings: View {
@@ -212,9 +272,12 @@ private struct BridgeSettings: View {
                         .textSelection(.enabled)
                 }
                 LabeledContent("Screen Time verdict") {
-                    if case .blocked = bridge.status {
+                    switch bridge.status {
+                    case .blocked:
                         Label("Blocked", systemImage: "hourglass.bottomhalf.filled").foregroundStyle(.red)
-                    } else {
+                    case .extraTime(_, let until):
+                        Text("Over limit · extra time until \(until.formatted(date: .omitted, time: .shortened))")
+                    default:
                         Text("Allowed")
                     }
                 }
